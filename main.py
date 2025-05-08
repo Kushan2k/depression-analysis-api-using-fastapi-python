@@ -6,18 +6,19 @@ from api.models.models import UserData
 
 #routers
 from api.routers import user_router
+from api.routers import chat_route
 
 app = FastAPI(
     debug=True,
     
-)
-
-app.include_router(
-    user_router.router,
-    prefix="/api/v1",
+    
 )
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+app.include_router(user_router.router)
+
+@app.get("/chat/test/{id}")
+def read_root(id:int):
+    return {"Hello": f"World {id}" }
+
+app.include_router(chat_route.router)
