@@ -2,27 +2,23 @@
 from typing import Union
 
 from fastapi import FastAPI
-from models.models import UserData
+from api.models.models import UserData
 
-app = FastAPI()
+#routers
+from api.routers import user_router
+from api.routers import chat_route
+
+app = FastAPI(
+    debug=True,
+    
+    
+)
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+app.include_router(user_router.router)
 
+@app.get("/chat/test/{id}")
+def read_root(id:int):
+    return {"Hello": f"World {id}" }
 
-@app.post('/predict')
-async def predict(data: UserData):
-    """
-    Predict the user data.
-    """
-    # Here you would typically call your model to make a prediction
-    # For demonstration purposes, we'll just return the data back
-    return {
-        "id": data.id,
-        "name": data.name,
-        "email": data.email,
-        "password": data.password,
-        
-    }
+app.include_router(chat_route.router)
