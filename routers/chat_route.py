@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from api.models.chat_req import ChatRequestBody
-
+from sklearn.utils import _joblib
 
 questions = {
     1: {
@@ -67,9 +67,10 @@ questions = {
     }
 }
 
+model=_joblib.load('svc_model.joblib')
 
 router=APIRouter(
-  prefix="/api/v1/chat"
+prefix="/api/v1/chat"
 )
 
 # questions=json.loads(open(os.path.join('../data/questions.json'), 'r'))
