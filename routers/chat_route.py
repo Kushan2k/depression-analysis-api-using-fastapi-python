@@ -1,5 +1,6 @@
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from api.models.chat_req import ChatRequestBody
 
 
@@ -31,7 +32,7 @@ async def start_chat():
     """
     Start a chat.
     """
-    return {"message": "Chat started"}
+    return {"q": questions[1], "q_no": 1}
 
 
 @router.post('/respond')
@@ -42,5 +43,8 @@ async def respond_to_chat(body:ChatRequestBody):
 
     if body.q_no not in questions.keys():
         raise HTTPException(status_code=404, detail="Question not found")
+    
+    if body.q_no <max(questions.keys()):
+        return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
 
-    return {"message": f"Chat {id} responded"}
+    return {"message": f"you answerd all the questions, your last answer was {body.answer}"}
