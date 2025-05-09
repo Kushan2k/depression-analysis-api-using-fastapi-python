@@ -67,7 +67,7 @@ questions = {
     }
 }
 
-model=_joblib.load('svc_model.joblib')
+# model=_joblib.load('svc_model.joblib')
 
 router=APIRouter(
 prefix="/api/v1/chat"
