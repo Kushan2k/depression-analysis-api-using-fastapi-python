@@ -1,10 +1,12 @@
 
 from contextlib import asynccontextmanager
-from fastapi import APIRouter, HTTPException
+import os
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 import joblib
-from api.models.chat_req import ChatRequestBody
+from api.models.chat_req import ChatRequestBody, ChatStartRequestBody
 from sklearn.preprocessing import StandardScaler
+
 
 questions = {
     1: {
@@ -69,6 +71,7 @@ questions = {
     }
 }
 
+
 # model=_joblib.load('svc_model.joblib')
 model=None 
 
@@ -97,11 +100,29 @@ async def get_questions():
     return questions
 
 
-@router.get('/first')
-async def start_chat():
+@router.post('/first')
+async def start_chat(body:ChatStartRequestBody):
     """
     Start a chat.
     """
+
+    email=body.email
+
+    data_folder = '../data'
+    file_path = os.path.join(data_folder, f"{email}.txt")
+
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+
+    if os.path.exists(file_path):
+        with open(file_path, 'w') as file:
+            file.truncate(0)  # Clear the file
+    else:
+        with open(file_path, 'w') as file:
+            file.write("")  # Create a new file
+
+    
+
     return {"q": questions[1], "q_no": 1}
 
 
@@ -111,11 +132,15 @@ async def respond_to_chat(body:ChatRequestBody):
     Respond to a chat.
     """
 
+
     if body.q_no not in questions.keys():
         raise HTTPException(status_code=404, detail="Question not found")
     
     if body.q_no <max(questions.keys()):
         return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
+    
+
+    
     
     pred=predict_answer(body.answer)
 
