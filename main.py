@@ -1,10 +1,9 @@
 
 from typing import Annotated, Union
-
+from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from sqlalchemy.engine.base import Engine
 from api.models.models import UserData
-
 #routers
 from api.routers import user_router
 from api.routers import chat_route
@@ -25,25 +24,34 @@ def get_session():
         yield session
 
 
-# SessionDep = Annotated[Session, Depends(get_session)]
+SessionDep = Annotated[Session, Depends(get_session)]
+
+model=None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the ML model
+    create_db_and_tables()
+    
+    yield
+    # Clean up the ML models and release the resources
+    
+
 
 app = FastAPI(
     debug=True,
+    lifespan=lifespan,
 )
 
-# @app.on_event("startup")
-# def on_startup():
-#     create_db_and_tables()
 
-
-
-# @app.post("/heroes")
-# def create_hero(hero: Hero, session: SessionDep) -> Hero:
-#     print("Req came")
-#     session.add(hero)
-#     session.commit()
-#     session.refresh(hero)
-#     return hero
+@app.post("/heroes")
+def create_hero(hero: Hero, session: SessionDep) -> Hero:
+    print("Req came")
+    
+    session.add(hero)
+    session.commit()
+    session.refresh(hero)
+    return hero
 
 
 

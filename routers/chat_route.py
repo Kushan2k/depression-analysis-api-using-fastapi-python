@@ -1,8 +1,10 @@
 
+from contextlib import asynccontextmanager
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
+import joblib
 from api.models.chat_req import ChatRequestBody
-from sklearn.utils import _joblib
+from sklearn.preprocessing import StandardScaler
 
 questions = {
     1: {
@@ -68,9 +70,19 @@ questions = {
 }
 
 # model=_joblib.load('svc_model.joblib')
+model=None 
+
+@asynccontextmanager
+async def lifespan(app: APIRouter):
+    # Load the ML model
+    model=joblib.load('svc_model.joblib')
+    yield
+    # Clean up the ML models and release the resources
+    del model
 
 router=APIRouter(
-prefix="/api/v1/chat"
+    prefix="/api/v1/chat",
+    lifespan=lifespan,
 )
 
 # questions=json.loads(open(os.path.join('../data/questions.json'), 'r'))
@@ -79,6 +91,8 @@ async def get_questions():
     """
     Get all questions.
     """
+
+    print(dir(model))
 
     return questions
 

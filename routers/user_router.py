@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from sklearn.utils import _joblib as jb
-from sklearn.preprocessing import StandardScaler
+
 
 print("Loading user router...")
 
