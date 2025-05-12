@@ -108,7 +108,7 @@ async def start_chat(body:ChatStartRequestBody):
 
     email=body.email
 
-    data_folder = '../data'
+    data_folder = './data'
     file_path = os.path.join(data_folder, f"{email}.txt")
 
     if not os.path.exists(data_folder):
@@ -132,6 +132,10 @@ async def respond_to_chat(body:ChatRequestBody):
     Respond to a chat.
     """
 
+    email=body.email
+
+    file=open(os.path.join('./data', f"{email}.txt"), 'a')
+
 
     if body.q_no not in questions.keys():
         raise HTTPException(status_code=404, detail="Question not found")
@@ -139,7 +143,11 @@ async def respond_to_chat(body:ChatRequestBody):
     if body.q_no <max(questions.keys()):
         return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
     
+    print(file.name)
+    
+    file.write(f"{body.q_no} - {body.answer}\n")
 
+    file.close()
     
     
     pred=predict_answer(body.answer)

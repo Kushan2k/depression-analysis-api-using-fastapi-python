@@ -9,6 +9,7 @@ class ChatRequestBody(BaseModel):
 
     q_no:int
     answer:Union[int, float,str]
+    email:str
 
 
 class ChatStartRequestBody(BaseModel):
