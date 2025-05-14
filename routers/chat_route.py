@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 import joblib
 from api.models.chat_req import ChatRequestBody, ChatStartRequestBody
 from sklearn.preprocessing import StandardScaler
+import pandas as pd
 
 
 questions = {
@@ -135,23 +136,39 @@ async def respond_to_chat(body:ChatRequestBody):
     email=body.email
 
     file=open(os.path.join('./data', f"{email}.txt"), 'a')
-    print(email)
-    print(file)
-
-
+    
     if body.q_no not in questions.keys():
         raise HTTPException(status_code=404, detail="Question not found")
-    
-    
-    
-    if not body.q_no <max(questions.keys()):
+
+    if not body.q_no <max(questions.keys())+1:
         return JSONResponse(status_code=400, content={"message": 'question out of range'})
     
-    print('came here')
     
     file.write(f"{body.q_no} - {body.answer}\n")
 
     file.close()
+
+    if body.q_no == max(questions.keys()):
+
+        with open(os.path.join('./data', f"{email}.txt"), 'r') as file:
+            lines = file.readlines()
+            lines=list(set(lines))
+            # print(lines)
+
+            answers=list(map(lambda x: x.split(' - ')[1].strip(), lines))
+
+            print(answers)
+            
+
+            column_names=[
+                'Gender',	'Age','City',	'Academic Pressure'	,	'CGPA',	'Study Satisfaction'	,	'Sleep Duration',	'Dietary Habits',	'Degree',	'Have you ever had suicidal thoughts ?',	'Work/Study Hours',	'Financial Stress',	'Family History of Mental Illness'
+
+            ]
+            answers_df=pd.DataFrame(answers, columns=column_names)
+
+            print(answers_df.head())
+
+        return JSONResponse(status_code=200, content={"message": 'End of questions'})
     
     
     pred=predict_answer(body.answer)

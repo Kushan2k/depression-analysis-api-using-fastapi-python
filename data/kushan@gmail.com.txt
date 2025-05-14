@@ -1,3 +1,27 @@
 1 - Male
 1 - Male
 2 - 18-24
+2 - 18-24
+3 - 1urban
+4 - high
+5 - satisfied
+6 - satisfied
+7 - satisfied
+7 - 4-5 hourse
+7 - 4-5 hourse
+8 - 4-5 hourse
+9 - 4-5 hourse
+10 - healthy
+11 - diploma
+12 - never
+13 - 4-5 hours
+14 - likely
+15 - often
+15 - often
+15 - often
+15 - often
+15 - often
+15 - often
+15 - often
+15 - often
+15 - often
