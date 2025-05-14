@@ -11,7 +11,6 @@ app = FastAPI(
     title="Chat API",
     description="API for chat application",
     version="1.0.0",
-    
 )
 
 # routes definitions 

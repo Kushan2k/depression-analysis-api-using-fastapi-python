@@ -155,6 +155,7 @@ async def respond_to_chat(body:ChatRequestBody):
             lines=list(set(lines))
             # print(lines)
 
+            
             answers=list(map(lambda x: x.split(' - ')[1].strip(), lines))
 
             print(answers)
@@ -165,6 +166,8 @@ async def respond_to_chat(body:ChatRequestBody):
 
             ]
             answers_df=pd.DataFrame(answers, columns=column_names)
+
+            #TODO 
 
             print(answers_df.head())
 
