@@ -135,15 +135,19 @@ async def respond_to_chat(body:ChatRequestBody):
     email=body.email
 
     file=open(os.path.join('./data', f"{email}.txt"), 'a')
+    print(email)
+    print(file)
 
 
     if body.q_no not in questions.keys():
         raise HTTPException(status_code=404, detail="Question not found")
     
-    if body.q_no <max(questions.keys()):
-        return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
     
-    print(file.name)
+    
+    if not body.q_no <max(questions.keys()):
+        return JSONResponse(status_code=400, content={"message": 'question out of range'})
+    
+    print('came here')
     
     file.write(f"{body.q_no} - {body.answer}\n")
 
@@ -152,7 +156,7 @@ async def respond_to_chat(body:ChatRequestBody):
     
     pred=predict_answer(body.answer)
 
-    return {"message": f"you answerd all the questions, your last answer was {body.answer}"}
+    return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
 
 
 
