@@ -1,0 +1,32 @@
+
+
+
+# endpoint for api testing 
+###
+GET http://localhost:8000/api/v1/user/test
+
+
+# get all the questions
+###
+GET http://localhost:8000/api/v1/chat/questions
+
+
+# get the first question and create the data file
+###
+POST http://localhost:8000/api/v1/chat/first
+
+{
+  "email":"kushan1@gmail.com"
+}
+
+
+
+# answer the question 
+###
+POST http://localhost:8000/api/v1/chat/respond
+
+{
+  "q_no":3,
+  "answer":"sdfsdfd",
+  "email":"kushan1@gmail.com"
+}
