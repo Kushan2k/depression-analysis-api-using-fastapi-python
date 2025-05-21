@@ -23,19 +23,16 @@ questions = {
         "question": "What is your age?",
         "answers": []
     },
+    
     3: {
-        "question": "What your current city or town of residence?",
-        "answers": []
-    },
-    4: {
         "question": "How much academic pressure do you feel?",
         "answers": [{"None":0}, {"Low":1}, {"Moderate":2}, {"Average":3},{"High":4}, {"Extremely high":5}]
     },
-    5: {
+    4: {
         "question": "How are you with your academic CGPA value?",
         "answers": []
     },
-    6: {
+    5: {
         "question": "How satisfied are you with your current field of study?",
         "answers": [{
             "Very dissatisfied":0
@@ -51,7 +48,7 @@ questions = {
             "Best":5
         }]
     },
-    7: {
+    6: {
         "question": "If you are employed, how satisfied are you with your job?",
         "answers": [{
             "Very dissatisfied":0
@@ -67,7 +64,7 @@ questions = {
             "Best":5
         }]
     },
-    8: {
+    7: {
         "question": "On average, how many hours do you sleep?",
         "answers": [ {
             "Less than 5 hours":0,
@@ -83,11 +80,11 @@ questions = {
         }]
     },
    
-    9: {
+    8: {
         "question": "How would you rate your daily dietary habits?",
         "answers": [{'Healthy':0},{'Moderate':1}, {'Unhealthy':2}, {'Others':3}]
     },
-    10: {
+    9: {
         "question": "What level of education are you currently pursuing or have completed?",
         "answers": [{"B.Arch": 3},
         {"B.Com": 10},
@@ -110,19 +107,19 @@ questions = {
         {"MA": 19},
         {"MBA": 20},]
     },
-    11: {
+    10: {
         "question": "Have you ever had suicidal thoughts?",
         "answers": [{"Yes":1},{"No":0}]
     },
-    12: {
+    11: {
         "question": "On average, how many hours do you study or work per day?",
         "answers": []
     },
-    13: {
+    12: {
         "question": "How would you rate your financial stress level?",
         "answers": [{"Not at all":1}, {"Very low":2}, {"Moderate":3}, {"High":4}, {"Extreme":5}]
     },  
-    14: {
+    13: {
         "question": "Does anyone in your immediate family have a history of mental illness?",
         "answers": [{"No":1}, {"Yes":0}]
     },
@@ -212,13 +209,21 @@ async def respond_to_chat(body:ChatRequestBody):
         return JSONResponse(status_code=400, content={"message": 'question out of range'})
     
 
-    print(questions[body.q_no]['answers'])
+    answer_val=None
 
+    if len(questions[body.q_no]['answers'])==0:
+        answer_val=body.answer
+    else:
+        answer=questions[body.q_no]['answers'][body.answer]
 
-    return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
+    
+    if not answer_val:
+        return JSONResponse(status_code=400, content={"message": 'answer not found'})
+    
+    # return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
     
     
-    file.write(f"{body.q_no} - {questions[body.q_no]['answers'][body.answer]}\n")
+    file.write(f"{body.q_no} - {answer_val}\n")
 
     file.close()
 
