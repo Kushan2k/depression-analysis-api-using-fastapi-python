@@ -4,7 +4,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 import joblib
-from ..models.chat_req import ChatStartRequestBody,ChatRequestBody
+from models.chat_req import ChatRequestBody, ChatStartRequestBody
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from dotenv import load_dotenv
