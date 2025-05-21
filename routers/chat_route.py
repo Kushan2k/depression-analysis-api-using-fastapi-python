@@ -254,7 +254,13 @@ async def respond_to_chat(body:ChatRequestBody):
         return JSONResponse(status_code=200, content={"message": 'End of questions'})
     
     
-    pred=predict_answer(body.answer)
+    # pred=predict_answer(body.answer)
+
+    next_q=questions[body.q_no+1] if body.q_no+1 in questions.keys() else None
+
+    if not next_q:
+
+        return JSONResponse(status_code=400, content={"message": 'question not found'})
 
     return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
 
