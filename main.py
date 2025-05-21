@@ -2,8 +2,8 @@
 from fastapi import FastAPI
 
 #routers
-from api.routers import user_router
-from api.routers import chat_route
+from .routers import user_router
+from .routers import chat_route
 
 app = FastAPI(
     debug=True,
