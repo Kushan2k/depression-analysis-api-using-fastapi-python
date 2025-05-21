@@ -7,79 +7,147 @@ import joblib
 from api.models.chat_req import ChatRequestBody, ChatStartRequestBody
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
+from dotenv import load_dotenv
+
+from openai import OpenAI
+
+load_dotenv()
 
 
 questions = {
     1: {
         "question": "How do you identify your gender?",
-        "answers": ["Male", "Female", "Non-binary", "Prefer not to say", "Other"]
+        "answers": [{"Male":1}, {"Female":0}]
     },
     2: {
-        "question": "What is your age group?",
-        "answers": ["Below 18", "18–21", "22–25", "26–30", "Above 30"]
+        "question": "What is your age?",
+        "answers": []
     },
     3: {
-        "question": "How urbanized is your current city or town of residence?",
-        "answers": ["Rural", "Semi-rural", "Suburban", "Urban", "Metropolitan"]
+        "question": "What your current city or town of residence?",
+        "answers": []
     },
     4: {
         "question": "How much academic pressure do you feel?",
-        "answers": ["None", "Low", "Moderate", "High", "Extremely high"]
+        "answers": [{"None":0}, {"Low":1}, {"Moderate":2}, {"Average":3},{"High":4}, {"Extremely high":5}]
     },
     5: {
-        "question": "How satisfied are you with your academic CGPA?",
-        "answers": ["Very dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very satisfied"]
+        "question": "How are you with your academic CGPA value?",
+        "answers": []
     },
     6: {
         "question": "How satisfied are you with your current field of study?",
-        "answers": ["Very dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very satisfied"]
+        "answers": [{
+            "Very dissatisfied":0
+        }, {
+            "Dissatisfied":1
+        }, {
+            "Neutral":2
+        }, {
+            "Satisfied":3
+        }, {
+            "Very satisfied":4
+        },{
+            "Best":5
+        }]
     },
     7: {
         "question": "If you are employed, how satisfied are you with your job?",
-        "answers": ["Very dissatisfied", "Dissatisfied", "Neutral", "Satisfied", "Very satisfied"]
+        "answers": [{
+            "Very dissatisfied":0
+        }, {
+            "Dissatisfied":1
+        }, {
+            "Neutral":2
+        }, {
+            "Satisfied":3
+        }, {
+            "Very satisfied":4
+        },{
+            "Best":5
+        }]
     },
     8: {
-        "question": "On average, how many hours do you sleep on weekdays?",
-        "answers": ["Less than 4 hours", "4–5 hours", "6–7 hours", "8–9 hours", "More than 9 hours"]
+        "question": "On average, how many hours do you sleep?",
+        "answers": [ {
+            "Less than 5 hours":0,
+        
+        },{
+            "5-6 hours":1
+        }, {
+            "6-7 hours":2
+        }, {
+            "More than 8 hours":3
+        }, {
+            "Others":4
+        }]
     },
+   
     9: {
-        "question": "On average, how many hours do you sleep on weekends?",
-        "answers": ["Less than 4 hours", "4–5 hours", "6–7 hours", "8–9 hours", "More than 9 hours"]
+        "question": "How would you rate your daily dietary habits?",
+        "answers": [{'Healthy':0},{'Moderate':1}, {'Unhealthy':2}, {'Others':3}]
     },
     10: {
-        "question": "How would you rate your daily dietary habits?",
-        "answers": ["Very unhealthy", "Unhealthy", "Neutral", "Healthy", "Very healthy"]
+        "question": "What level of education are you currently pursuing or have completed?",
+        "answers": [{"B.Arch": 3},
+        {"B.Com": 10},
+        {"B.Ed": 5},
+        {"B.Pharm": 7},
+        {"B.Tech": 17},
+        {"BA": 27},
+        {"BBA": 11},
+        {"BCA": 2},
+        {"BE": 12},
+        {"BHM": 8},
+        {"BSc": 15},
+        {"Class 12": 25},
+        {"LLB": 9},
+        {"LLM": 16},
+        {"M.Com": 21},
+        {"M.Ed": 18},
+        {"M.Pharm": 1},
+        {"M.Tech": 22},
+        {"MA": 19},
+        {"MBA": 20},]
     },
     11: {
-        "question": "What level of education are you currently pursuing or have completed?",
-        "answers": ["High school", "Diploma", "Bachelor's", "Master's", "Doctorate"]
+        "question": "Have you ever had suicidal thoughts?",
+        "answers": [{"Yes":1},{"No":0}]
     },
     12: {
-        "question": "Have you ever had suicidal thoughts?",
-        "answers": ["Never", "Rarely", "Sometimes", "Often", "Very frequently"]
+        "question": "On average, how many hours do you study or work per day?",
+        "answers": []
     },
     13: {
-        "question": "On average, how many hours do you study or work per day?",
-        "answers": ["Less than 2 hours", "2–4 hours", "5–7 hours", "8–10 hours", "More than 10 hours"]
-    },
+        "question": "How would you rate your financial stress level?",
+        "answers": [{"Not at all":1}, {"Very low":2}, {"Moderate":3}, {"High":4}, {"Extreme":5}]
+    },  
     14: {
         "question": "Does anyone in your immediate family have a history of mental illness?",
-        "answers": ["Not at all", "Very unlikely", "Unsure", "Likely", "Definitely yes"]
+        "answers": [{"No":1}, {"Yes":0}]
     },
-    15: {
-        "question": "How often do you feel symptoms of depression (e.g., sadness, hopelessness, lack of energy)?",
-        "answers": ["Never", "Rarely", "Sometimes", "Often", "Always"]
-    }
+    
 }
 
 
 # model=_joblib.load('svc_model.joblib')
-model=None 
+model=None
+gptModel=None 
 
 @asynccontextmanager
 async def lifespan(app: APIRouter):
     # Load the ML model
     model=joblib.load('svc_model.joblib')
+    # gptModel = OpenAI(
+    #     api_key=os.getenv("OPENAI_API_KEY"),
+        
+    # )
+
+    # response =await gptModel.responses.create(
+    #     model="gpt-4.1",
+    #     input="Tell me a three sentence bedtime story about a unicorn."
+    # )
+    # print(response.choices[0].text.strip())
     yield
     # Clean up the ML models and release the resources
     del model
@@ -91,7 +159,7 @@ router=APIRouter(
 
 # questions=json.loads(open(os.path.join('../data/questions.json'), 'r'))
 @router.get('/questions')
-async def get_questions():
+def get_questions():
     """
     Get all questions.
     """
@@ -143,8 +211,14 @@ async def respond_to_chat(body:ChatRequestBody):
     if not body.q_no <max(questions.keys())+1:
         return JSONResponse(status_code=400, content={"message": 'question out of range'})
     
+
+    print(questions[body.q_no]['answers'])
+
+
+    return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
     
-    file.write(f"{body.q_no} - {body.answer}\n")
+    
+    file.write(f"{body.q_no} - {questions[body.q_no]['answers'][body.answer]}\n")
 
     file.close()
 
@@ -168,6 +242,7 @@ async def respond_to_chat(body:ChatRequestBody):
             answers_df=pd.DataFrame(answers, columns=column_names)
 
             #TODO 
+            
 
             print(answers_df.head())
 

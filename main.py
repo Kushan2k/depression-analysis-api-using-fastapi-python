@@ -5,7 +5,6 @@ from fastapi import FastAPI
 from api.routers import user_router
 from api.routers import chat_route
 
-    
 app = FastAPI(
     debug=True,
     title="Chat API",
@@ -14,5 +13,5 @@ app = FastAPI(
 )
 
 # routes definitions 
-app.include_router(user_router.router)
 app.include_router(chat_route.router)
+app.include_router(user_router.router)
