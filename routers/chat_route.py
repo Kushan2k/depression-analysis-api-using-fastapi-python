@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 import joblib
 import numpy as np
 from models.chat_req import ChatRequestBody, ChatStartRequestBody
-from sklearn.preprocessing import StandardScaler, scale
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -256,18 +256,22 @@ async def respond_to_chat(body:ChatRequestBody):
             # print(answers_df.head())
 
             # answers_df=answers_df.astype(np.float32)
+            print(answers)
+            # print(answers_df.describe())
 
-            scaler = StandardScaler()
-
-            col_to_scale=['Age','CGPA','Degree','Work/Study Hours','Academic Pressure']
-        
-            for col in col_to_scale:
-                answers_df[col]=scaler.fit_transform(answers_df[[col]])
-
-            print(answers_df.head())
+            scaler=joblib.load('scaler.joblib')
             model=joblib.load('svc_model.joblib')
+            
+            scaled_answers=scaler.transform(answers_df)
+        
+            scaled_answers=pd.DataFrame(scaled_answers,columns=scaler.get_feature_names_out())
 
-            prediction=model.predict(answers_df)
+            # print(answers_df.describe())
+
+            print(scaled_answers.head())
+            
+
+            prediction=model.predict(scaled_answers)
 
             print(prediction)
 
