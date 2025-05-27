@@ -268,7 +268,8 @@ async def respond_to_chat(body:ChatRequestBody):
 
             # print(answers_df.describe())
 
-            print(scaled_answers.head())
+            print(scaled_answers.describe())
+            
             
 
             prediction=model.predict(scaled_answers)
