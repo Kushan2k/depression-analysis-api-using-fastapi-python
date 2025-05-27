@@ -4,8 +4,9 @@ import os
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 import joblib
+import numpy as np
 from models.chat_req import ChatRequestBody, ChatStartRequestBody
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, scale
 import pandas as pd
 from dotenv import load_dotenv
 
@@ -17,7 +18,7 @@ load_dotenv()
 questions = {
     1: {
         "question": "How do you identify your gender?",
-        "answers": [{"Male":1}, {"Female":0}]
+        "answers": {"Male":1, "Female":0}
     },
     2: {
         "question": "What is your age?",
@@ -26,7 +27,7 @@ questions = {
     
     3: {
         "question": "How much academic pressure do you feel?",
-        "answers": [{"None":0}, {"Low":1}, {"Moderate":2}, {"Average":3},{"High":4}, {"Extremely high":5}]
+        "answers": {"None":0, "Low":1, "Moderate":2, "Average":3,"High":4, "Extremely high":5}
     },
     4: {
         "question": "How are you with your academic CGPA value?",
@@ -34,95 +35,95 @@ questions = {
     },
     5: {
         "question": "How satisfied are you with your current field of study?",
-        "answers": [{
-            "Very dissatisfied":0
-        }, {
-            "Dissatisfied":1
-        }, {
-            "Neutral":2
-        }, {
-            "Satisfied":3
-        }, {
-            "Very satisfied":4
-        },{
-            "Best":5
-        }]
+        "answers": {
+            "Very dissatisfied":0,
+        
+            "Dissatisfied":1,
+        
+            "Neutral":2,
+        
+            "Satisfied":3,
+        
+            "Very satisfied":4,
+        
+            "Best":5,
+        }
     },
     6: {
-        "question": "If you are employed, how satisfied are you with your job?",
-        "answers": [{
-            "Very dissatisfied":0
-        }, {
-            "Dissatisfied":1
-        }, {
-            "Neutral":2
-        }, {
-            "Satisfied":3
-        }, {
-            "Very satisfied":4
-        },{
-            "Best":5
-        }]
-    },
-    7: {
         "question": "On average, how many hours do you sleep?",
-        "answers": [ {
+        "answers":  {
             "Less than 5 hours":0,
         
-        },{
-            "5-6 hours":1
-        }, {
-            "6-7 hours":2
-        }, {
-            "More than 8 hours":3
-        }, {
-            "Others":4
-        }]
+        
+            "5-6 hours":1,
+        
+            "6-7 hours":2,
+        
+            "More than 8 hours":3,
+        
+            "Others":4,
+        }
     },
-   
-    8: {
+    7: {
         "question": "How would you rate your daily dietary habits?",
-        "answers": [{'Healthy':0},{'Moderate':1}, {'Unhealthy':2}, {'Others':3}]
+        "answers": {'Healthy':0,'Moderate':1, 'Unhealthy':2, 'Others':3}
     },
-    9: {
+    8: {
         "question": "What level of education are you currently pursuing or have completed?",
-        "answers": [{"B.Arch": 3},
-        {"B.Com": 10},
-        {"B.Ed": 5},
-        {"B.Pharm": 7},
-        {"B.Tech": 17},
-        {"BA": 27},
-        {"BBA": 11},
-        {"BCA": 2},
-        {"BE": 12},
-        {"BHM": 8},
-        {"BSc": 15},
-        {"Class 12": 25},
-        {"LLB": 9},
-        {"LLM": 16},
-        {"M.Com": 21},
-        {"M.Ed": 18},
-        {"M.Pharm": 1},
-        {"M.Tech": 22},
-        {"MA": 19},
-        {"MBA": 20},]
+        "answers": { "B.Arch": 3,
+        "B.Com": 10,
+        "B.Ed": 5,
+        "B.Pharm": 7,
+        "B.Tech": 17,
+        "BA": 27,
+        "BBA": 11,
+        "BCA": 2,
+        "BE": 12,
+        "BHM": 8,
+        "BSc": 15,
+        "Class 12": 25,
+        "LLB": 9,
+        "LLM": 16,
+        "M.Com": 21,
+        "M.Ed": 18,
+        "M.Pharm": 1,
+        "M.Tech": 22,
+        "MA": 19,
+        "MBA": 20}
     },
-    10: {
+     9: {
         "question": "Have you ever had suicidal thoughts?",
-        "answers": [{"Yes":1},{"No":0}]
+        "answers": {"Yes":1,"No":0}
     },
-    11: {
+     10: {
         "question": "On average, how many hours do you study or work per day?",
         "answers": []
     },
-    12: {
+     11: {
         "question": "How would you rate your financial stress level?",
-        "answers": [{"Not at all":1}, {"Very low":2}, {"Moderate":3}, {"High":4}, {"Extreme":5}]
-    },  
-    13: {
-        "question": "Does anyone in your immediate family have a history of mental illness?",
-        "answers": [{"No":1}, {"Yes":0}]
+        "answers": {"Not at all":1, "Very low":2, "Moderate":3, "High":4, "Extreme":5}
     },
+     12: {
+        "question": "Does anyone in your immediate family have a history of mental illness?",
+        "answers": {"No":1, "Yes":0}
+    }, 
+    13: {
+        "question": "If you are employed, how satisfied are you with your job?",
+        "answers": {
+            "Very dissatisfied":0,
+        
+            "Dissatisfied":1,
+        
+            "Neutral":2,
+        
+            "Satisfied":3,
+        
+            "Very satisfied":4,
+        
+            "Best":5,
+        }
+    },
+
     
 }
 
@@ -214,7 +215,7 @@ async def respond_to_chat(body:ChatRequestBody):
     if len(questions[body.q_no]['answers'])==0:
         answer_val=body.answer
     else:
-        answer=questions[body.q_no]['answers'][body.answer]
+        answer_val=questions[body.q_no]['answers'][body.answer]
 
     
     if not answer_val:
@@ -222,8 +223,8 @@ async def respond_to_chat(body:ChatRequestBody):
     
     # return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
     
-    
-    file.write(f"{body.q_no} - {answer_val}\n")
+    if body.q_no != 13:
+        file.write(f"{body.q_no} - {answer_val}\n")
 
     file.close()
 
@@ -235,23 +236,47 @@ async def respond_to_chat(body:ChatRequestBody):
             # print(lines)
 
             
-            answers=list(map(lambda x: x.split(' - ')[1].strip(), lines))
+            answers=list(map(lambda x: float(x.split(' - ')[1].strip()), lines))
 
-            print(answers)
+            # print(len(answers))
             
 
             column_names=[
-                'Gender',	'Age','City',	'Academic Pressure'	,	'CGPA',	'Study Satisfaction'	,	'Sleep Duration',	'Dietary Habits',	'Degree',	'Have you ever had suicidal thoughts ?',	'Work/Study Hours',	'Financial Stress',	'Family History of Mental Illness'
+                'Gender',	'Age',	'Academic Pressure'	,	'CGPA',	'Study Satisfaction'	,	'Sleep Duration',	'Dietary Habits',	'Degree',	'Have you ever had suicidal thoughts ?',	'Work/Study Hours',	'Financial Stress',	'Family History of Mental Illness'
 
             ]
-            answers_df=pd.DataFrame(answers, columns=column_names)
+
+            # print(len(column_names))
+            answers_df=pd.DataFrame([answers], columns=column_names)
 
             #TODO 
             
+            # print(answers_df.info())
+
+            # print(answers_df.head())
+
+            # answers_df=answers_df.astype(np.float32)
+
+            scaler = StandardScaler()
+
+            col_to_scale=['Age','CGPA','Degree','Work/Study Hours','Academic Pressure']
+        
+            for col in col_to_scale:
+                answers_df[col]=scaler.fit_transform(answers_df[[col]])
 
             print(answers_df.head())
+            model=joblib.load('svc_model.joblib')
 
-        return JSONResponse(status_code=200, content={"message": 'End of questions'})
+            prediction=model.predict(answers_df)
+
+            print(prediction)
+
+            if prediction[0] == 1:
+                result = "You are at risk of mental health issues. Please consider seeking help from a professional."
+            else:
+                result = "You are not at risk of mental health issues based on your responses."
+
+        return JSONResponse(status_code=200, content={"message": 'End of questions',"status":result})
     
     
     # pred=predict_answer(body.answer)
