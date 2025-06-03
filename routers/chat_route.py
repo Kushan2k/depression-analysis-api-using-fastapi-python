@@ -1,16 +1,17 @@
 
 from contextlib import asynccontextmanager
+import json
 import os
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 import joblib
 import numpy as np
+import openai
+from data.data import get_recommendation
 from models.chat_req import ChatRequestBody, ChatStartRequestBody
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from dotenv import load_dotenv
-
-from openai import OpenAI
 
 load_dotenv()
 
@@ -53,8 +54,6 @@ questions = {
         "question": "On average, how many hours do you sleep?",
         "answers":  {
             "Less than 5 hours":0,
-        
-        
             "5-6 hours":1,
         
             "6-7 hours":2,
@@ -130,22 +129,13 @@ questions = {
 
 # model=_joblib.load('svc_model.joblib')
 model=None
-gptModel=None 
+
 
 @asynccontextmanager
 async def lifespan(app: APIRouter):
     # Load the ML model
     model=joblib.load('svc_model.joblib')
-    # gptModel = OpenAI(
-    #     api_key=os.getenv("OPENAI_API_KEY"),
-        
-    # )
-
-    # response =await gptModel.responses.create(
-    #     model="gpt-4.1",
-    #     input="Tell me a three sentence bedtime story about a unicorn."
-    # )
-    # print(response.choices[0].text.strip())
+    
     yield
     # Clean up the ML models and release the resources
     del model
@@ -249,11 +239,7 @@ async def respond_to_chat(body:ChatRequestBody):
             # print(len(column_names))
             answers_df=pd.DataFrame([answers], columns=column_names)
 
-            #TODO 
             
-            # print(answers_df.info())
-
-            # print(answers_df.head())
 
             # answers_df=answers_df.astype(np.float32)
             print(answers)
@@ -263,12 +249,14 @@ async def respond_to_chat(body:ChatRequestBody):
             model=joblib.load('svc_model.joblib')
             
             scaled_answers=scaler.transform(answers_df)
+
+            print(scaled_answers)
         
-            scaled_answers=pd.DataFrame(scaled_answers,columns=scaler.get_feature_names_out())
+            # scaled_answers=pd.DataFrame(scaled_answers,columns=scaler.get_feature_names_out())
 
             # print(answers_df.describe())
 
-            print(scaled_answers.describe())
+            # print(scaled_answers.iloc[0])
             
             
 
@@ -281,7 +269,7 @@ async def respond_to_chat(body:ChatRequestBody):
             else:
                 result = "You are not at risk of mental health issues based on your responses."
 
-        return JSONResponse(status_code=200, content={"message": 'End of questions',"status":result})
+        return JSONResponse(status_code=200, content={"message": 'End of questions', "status": result, "at_risk": True if prediction[0] == 1 else False, 'recommend': get_recommendation()})
     
     
     # pred=predict_answer(body.answer)
@@ -293,14 +281,3 @@ async def respond_to_chat(body:ChatRequestBody):
         return JSONResponse(status_code=400, content={"message": 'question not found'})
 
     return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
-
-
-
-def predict_answer(data: dict[str, any]) -> int:
-    """
-    Predict the answer to a question.
-    """
-
-    
-
-    return 1
