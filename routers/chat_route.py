@@ -2,11 +2,10 @@
 from contextlib import asynccontextmanager
 import json
 import os
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 import joblib
 import numpy as np
-import openai
 from data.data import get_recommendation
 from models.chat_req import ChatRequestBody, ChatStartRequestBody
 from sklearn.preprocessing import StandardScaler
