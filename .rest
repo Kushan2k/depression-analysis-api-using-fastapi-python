@@ -27,6 +27,6 @@ POST http://localhost:8000/api/v1/chat/respond
 
 {
   "q_no":13,
-  "answer":"Dissatisfied",
+  "answer":2,
   "email":"kushan1@gmail.com"
 }

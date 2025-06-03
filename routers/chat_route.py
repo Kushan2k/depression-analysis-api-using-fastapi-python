@@ -28,7 +28,7 @@ questions = {
     
     3: {
         "question": "How much academic pressure do you feel?",
-        "answers": {"None":0, "Low":1, "Moderate":2, "Average":3,"High":4, "Extremely high":5}
+        "answers": []
     },
     4: {
         "question": "How are you with your academic CGPA value?",
@@ -36,19 +36,7 @@ questions = {
     },
     5: {
         "question": "How satisfied are you with your current field of study?",
-        "answers": {
-            "Very dissatisfied":0,
-        
-            "Dissatisfied":1,
-        
-            "Neutral":2,
-        
-            "Satisfied":3,
-        
-            "Very satisfied":4,
-        
-            "Best":5,
-        }
+        "answers": []
     },
     6: {
         "question": "On average, how many hours do you sleep?",
@@ -100,7 +88,7 @@ questions = {
     },
      11: {
         "question": "How would you rate your financial stress level?",
-        "answers": {"Not at all":1, "Very low":2, "Moderate":3, "High":4, "Extreme":5}
+        "answers": []
     },
      12: {
         "question": "Does anyone in your immediate family have a history of mental illness?",
@@ -108,19 +96,7 @@ questions = {
     }, 
     13: {
         "question": "If you are employed, how satisfied are you with your job?",
-        "answers": {
-            "Very dissatisfied":0,
-        
-            "Dissatisfied":1,
-        
-            "Neutral":2,
-        
-            "Satisfied":3,
-        
-            "Very satisfied":4,
-        
-            "Best":5,
-        }
+        "answers": []
     },
 
     
@@ -202,10 +178,9 @@ async def respond_to_chat(body:ChatRequestBody):
 
     answer_val=None
 
-    if len(questions[body.q_no]['answers'])==0:
-        answer_val=body.answer
-    else:
-        answer_val=questions[body.q_no]['answers'][body.answer]
+    
+    answer_val=body.answer
+    
 
     
     if not answer_val:
@@ -220,13 +195,15 @@ async def respond_to_chat(body:ChatRequestBody):
 
     if body.q_no == max(questions.keys()):
 
+        label_encoders = joblib.load('label_encoders.joblib')
+
         with open(os.path.join('./data', f"{email}.txt"), 'r') as file:
             lines = file.readlines()
             lines=list(set(lines))
             # print(lines)
 
             
-            answers=list(map(lambda x: float(x.split(' - ')[1].strip()), lines))
+            answers=list(map(lambda x: x.split(' - ')[1].strip(), lines))  # Remove empty lines
 
             # print(len(answers))
             
@@ -236,13 +213,43 @@ async def respond_to_chat(body:ChatRequestBody):
 
             ]
 
+            # Map column names to answers as a dictionary
+            answers_dict = {}
+            for line in answers:
+                q_no, ans = line.strip().split(' - ', 1)
+                q_no = int(q_no)
+                if q_no <= len(column_names):
+                    answers_dict[column_names[q_no - 1]] = ans
+            
+
+            print(answers)
+            print(answers_dict)
+
+            # return {'done':True}
+
             # print(len(column_names))
             answers_df=pd.DataFrame([answers], columns=column_names)
+
+
+            catgorical=['Gender','Sleep Duration','Dietary Habits','Degree','Have you ever had suicidal thoughts ?','Family History of Mental Illness']
+
+            for col in catgorical:
+
+                val= answers_dict[col]
+                
+                le = label_encoders[col]
+                print(le.classes_)
+                if val in le.classes_:
+                    answers_df[col] = int(le.transform([val])[0])
+                else:
+                    return {"error": f"Unknown category '{val}' for column '{col}'"}
+            
 
             
 
             # answers_df=answers_df.astype(np.float32)
             print(answers)
+            print(answers_df)
             # print(answers_df.describe())
 
             scaler=joblib.load('scaler.joblib')
