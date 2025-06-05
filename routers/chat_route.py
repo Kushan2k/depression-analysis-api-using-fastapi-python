@@ -188,6 +188,9 @@ async def respond_to_chat(body:ChatRequestBody):
     Respond to a chat.
     """
 
+
+    return JSONResponse(status_code=200, content={"message": 'End of questions', "status": 1, "at_risk": True, 'recommend': get_recommendation()})
+
     email=body.email
 
     file=open(os.path.join('./data', f"{email}.txt"), 'a')
