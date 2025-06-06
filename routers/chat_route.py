@@ -11,9 +11,14 @@ from models.chat_req import ChatRequestBody, ChatStartRequestBody
 from sklearn.preprocessing import StandardScaler
 import pandas as pd
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()
-
+model = joblib.load("pkl/model.pkl")
+gender_enc = joblib.load("pkl/gender_encoder.pkl")
+sleep_enc = joblib.load("pkl/sleep_encoder.pkl")
+diet_enc = joblib.load("pkl/diet_encoder.pkl")
+scaler = joblib.load("pkl/scaler.pkl")
 
 questions = {
     1: {
@@ -126,14 +131,66 @@ questions = {
 }
 
 
+
+def binary_encode(value: str) -> int:
+    return 1 if value.lower() == "yes" else 0
+
 # model=_joblib.load('svc_model.joblib')
-model=None
+# model=None
+
+def predict(
+        Gender: str='Male',
+    Age: float=25,
+    Academic_Pressure: float=0,
+    CGPA: float=0.0,
+    Study_Satisfaction: float=0,
+    Sleep_Duration: str='Others',
+    Dietary_Habits: str='Healthy',
+    Degree: str='BSc',
+    Suicidal_Thoughts: str='no',  # Yes/No
+    Work_Study_Hours: float=5,
+    Financial_Stress: float='no',
+    Family_History: str='no',
+):
+    try:
+        # Encode categorical fields
+        gender = gender_enc.transform([Gender])[0]
+        sleep = sleep_enc.transform([Sleep_Duration])[0]
+        diet = diet_enc.transform([Dietary_Habits])[0]
+        suicidal = binary_encode(Suicidal_Thoughts)
+        family = binary_encode(Family_History)
+
+        # Hash encode city, profession, degree
+        
+        degree = hash(Degree) % 1000
+
+        # Combine features
+        raw = [
+            gender, Age,
+            Academic_Pressure, CGPA,
+            Study_Satisfaction,
+            sleep, diet, degree, suicidal,
+            Work_Study_Hours, Financial_Stress, family
+        ]
+
+        print(f"Raw input features: {raw}")
+
+        # Scale
+        X_scaled = scaler.transform([raw])
+
+        # Predict
+        prediction = model.predict(X_scaled)[0]
+        return prediction
+    except Exception as e:
+        raise Exception(f"Error during prediction: {str(e)}")
+
+
 
 
 @asynccontextmanager
 async def lifespan(app: APIRouter):
     # Load the ML model
-    model=joblib.load('svc_model.joblib')
+    # model=joblib.load('svc_model.joblib')
     
     yield
     # Clean up the ML models and release the resources
@@ -220,55 +277,64 @@ async def respond_to_chat(body:ChatRequestBody):
     if body.q_no == max(questions.keys()):
 
         with open(os.path.join('./data', f"{email}.txt"), 'r') as file:
-            lines = file.readlines()
-            lines=list(set(lines))
-            # print(lines)
+
+
+            # lines = file.readlines()
+            # lines=list(set(lines))
+            # # print(lines)
 
             
-            answers=list(map(lambda x: float(x.split(' - ')[1].strip()), lines))
+            # answers=list(map(lambda x: float(x.split(' - ')[1].strip()), lines))
 
-            # print(len(answers))
+            lines:list[str]=[]
+
+            for line in file.readlines():
+                print(line)
+                no=line.split(' - ')[0].strip()
+                ans=line.split(' - ')[1].strip()
+
+                if no not in lines:
+                    lines.append(ans)
+
+            
+            lines=lines[:-1]
             
 
-            column_names=[
-                'Gender',	'Age',	'Academic Pressure'	,	'CGPA',	'Study Satisfaction'	,	'Sleep Duration',	'Dietary Habits',	'Degree',	'Have you ever had suicidal thoughts ?',	'Work/Study Hours',	'Financial Stress',	'Family History of Mental Illness'
+            lines=[float(x) if x.isnumeric() or x.isdecimal() else x for x in lines]
+            print(lines)
 
-            ]
-
-            # print(len(column_names))
-            answers_df=pd.DataFrame([answers], columns=column_names)
+            try:
+                prediction=predict(
+                    Gender=lines[0],
+                    Age=lines[1], 
+                    Academic_Pressure=lines[2], 
+                    CGPA=lines[3], 
+                    Study_Satisfaction=lines[4], 
+                    Sleep_Duration=lines[5],
+                    Dietary_Habits=lines[6], 
+                    Degree=lines[7], 
+                    Suicidal_Thoughts=lines[8], 
+                    Work_Study_Hours=lines[9], 
+                    Financial_Stress=lines[10], 
+                    Family_History=lines[11]
+                            )
+            except Exception as e:
+                print(f"Error during prediction: {str(e)}")
+                
 
             
 
-            # answers_df=answers_df.astype(np.float32)
-            print(answers)
-            # print(answers_df.describe())
-
-            scaler=joblib.load('scaler.joblib')
-            model=joblib.load('svc_model.joblib')
+            # prediction=model.predict(scaled_answers)
             
-            scaled_answers=scaler.transform(answers_df)
-
-            print(scaled_answers)
-        
-            # scaled_answers=pd.DataFrame(scaled_answers,columns=scaler.get_feature_names_out())
-
-            # print(answers_df.describe())
-
-            # print(scaled_answers.iloc[0])
-            
-            
-
-            prediction=model.predict(scaled_answers)
 
             print(prediction)
 
-            if prediction[0] == 1:
+            if prediction == 1:
                 result = "You are at risk of mental health issues. Please consider seeking help from a professional."
             else:
                 result = "You are not at risk of mental health issues based on your responses."
 
-        return JSONResponse(status_code=200, content={"message": 'End of questions', "status": result, "at_risk": True if prediction[0] == 1 else False, 'recommend': get_recommendation()})
+        return JSONResponse(status_code=200, content={"message": 'End of questions', "status": result, "at_risk": True if prediction == 1 else False, 'recommend': get_recommendation()})
     
     
     # pred=predict_answer(body.answer)
