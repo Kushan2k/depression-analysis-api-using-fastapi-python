@@ -260,7 +260,7 @@ async def respond_to_chat(body:ChatRequestBody):
 
     print(f"Received answer for question {body.q_no}: {body.answer}")
 
-    print(questions[body.q_no]['answers'][body.answer])
+    # print(questions[body.q_no]['answers'][body.answer])
 
     
 
