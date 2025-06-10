@@ -26,7 +26,16 @@ POST http://localhost:8000/api/v1/chat/first
 POST http://localhost:8000/api/v1/chat/respond
 
 {
-  "q_no":2,
-  "answer":25,
+  "q_no":13,
+  "answer":"Dissatisfied",
   "email":"kushan1@gmail.com"
 }
+
+
+###
+"answers": {
+      "Healthy": 0,
+      "Moderate": 1,
+      "Unhealthy": 2,
+      "Others": 3
+    }

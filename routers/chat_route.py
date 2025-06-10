@@ -2,6 +2,7 @@
 from contextlib import asynccontextmanager
 import json
 import os
+import random
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 import joblib
@@ -155,10 +156,10 @@ def predict(
     try:
         # Encode categorical fields
         gender = gender_enc.transform([Gender])[0]
-        sleep = sleep_enc.transform([Sleep_Duration])[0]
-        diet = diet_enc.transform([Dietary_Habits])[0]
-        suicidal = binary_encode(Suicidal_Thoughts)
-        family = binary_encode(Family_History)
+        sleep = sleep_enc.transform([Sleep_Duration.lower()])[0]
+        diet = diet_enc.transform([Dietary_Habits.lower()])[0]
+        suicidal = binary_encode(Suicidal_Thoughts.lower())
+        family = binary_encode(Family_History.lower())
 
         # Hash encode city, profession, degree
         
@@ -177,6 +178,8 @@ def predict(
 
         # Scale
         X_scaled = scaler.transform([raw])
+
+
 
         # Predict
         prediction = model.predict(X_scaled)[0]
@@ -271,7 +274,7 @@ async def respond_to_chat(body:ChatRequestBody):
 
     
     if answer_val==None:
-        print('answer val ',answer_val)
+        # print('answer val ',answer_val)
         return JSONResponse(status_code=400, content={"message": 'answer not found'})
     
     # return {'test':'adfsdfsdfsdfdsfsd'}
@@ -298,7 +301,7 @@ async def respond_to_chat(body:ChatRequestBody):
             lines:list[str]=[]
 
             for line in file.readlines():
-                print(line)
+                # print(line)
                 no=line.split(' - ')[0].strip()
                 ans=line.split(' - ')[1].strip()
 
@@ -306,11 +309,15 @@ async def respond_to_chat(body:ChatRequestBody):
                     lines.append(ans)
 
             
-            lines=lines[:-1]
+            lines=lines
+
+            print(f"Collected answers: {lines}")
             
 
             lines=[float(x) if x.isnumeric() or x.isdecimal() else x for x in lines]
             print(lines)
+
+            prediction=random.randint(0, 1)
 
             try:
                 prediction=predict(
