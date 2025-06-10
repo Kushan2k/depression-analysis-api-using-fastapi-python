@@ -258,14 +258,23 @@ async def respond_to_chat(body:ChatRequestBody):
 
     answer_val=None
 
+    print(f"Received answer for question {body.q_no}: {body.answer}")
+
+    print(questions[body.q_no]['answers'][body.answer])
+
+    
+
     if len(questions[body.q_no]['answers'])==0:
         answer_val=body.answer
     else:
         answer_val=questions[body.q_no]['answers'][body.answer]
 
     
-    if not answer_val:
+    if answer_val==None:
+        print('answer val ',answer_val)
         return JSONResponse(status_code=400, content={"message": 'answer not found'})
+    
+    # return {'test':'adfsdfsdfsdfdsfsd'}
     
     # return JSONResponse(status_code=200, content={"q": questions[body.q_no+1], "q_no": body.q_no+1})
     
