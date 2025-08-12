@@ -1,5 +1,6 @@
 
-from fastapi import FastAPI
+from fastapi import FastAP
+import random
 
 #routers
 from routers import chat_route
